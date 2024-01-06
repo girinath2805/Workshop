@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
+import { ABI } from '../utils/abi';
 
 const Freelancer = ({ signer }) => {
     const [works, setWorks] = useState([]);
@@ -7,22 +8,16 @@ const Freelancer = ({ signer }) => {
     useEffect(() => {
         const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS;
 
-        const abi = [
-            "function getWork(uint _workIndex) external view returns (address client, address freelancer, uint amount, bool completed)",
-            "function getWorkIndex() external view returns (uint)",
-            "function withdrawFunds(uint _workIndex) external"
-        ];
-
-        const contract = new ethers.Contract(contractAddress, abi, signer);
+        const contract = new ethers.Contract(contractAddress, ABI, signer);
 
         const updateTable = async () => {
             try {
-                const index = await contract.getWorkIndex();
+                const index = await contract.workIndex();
                 const signerAddress = await signer.getAddress();
 
                 const worksArray = [];
                 for (let i = 1; i <= index; i++) {
-                    const work = await contract.getWork(i);
+                    const work = await contract.works(i);
 
                     if (work.freelancer.toLowerCase() === signerAddress.toLowerCase()) {
                         worksArray.push({

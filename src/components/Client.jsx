@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ethers } from 'ethers';
+import { ABI } from '../utils/abi'; 
 
 const Client = ({ signer }) => {
     const [works, setWorks] = useState([]);
@@ -19,15 +20,8 @@ const Client = ({ signer }) => {
                 }
 
                 const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS
-
-                const abi = [
-                    "function depositFunds(address _freelancer) external payable",
-                    "function getWork(uint _workIndex) external view returns (address client, address freelancer, uint amount, bool completed)",
-                    "function getWorkIndex() external view returns (uint)",
-                    "function completeWork(uint _workIndex) external"
-                ];
     
-                const contractInstance = new ethers.Contract(contractAddress, abi, signer || provider);
+                const contractInstance = new ethers.Contract(contractAddress, ABI, signer || provider);
                 setContract(contractInstance);
             } catch (error) {
                 console.error("Error initializing contract:", error);
@@ -47,13 +41,13 @@ const Client = ({ signer }) => {
     const updateTable = async () => {
         try {
             // Fetch and display works from the contract
-            const index = await contract.getWorkIndex()
+            const index = await contract.workIndex()
             console.log(index)
             const signerAddress = await signer.getAddress();
 
             const worksArray = [];
             for (let i = 1; i <= index; i++) {
-                const work = await contract.getWork(i);
+                const work = await contract.works(i);
 
                 // Display only works where the client address matches the signer address
                 if (work.client.toLowerCase() === signerAddress.toLowerCase()) {
