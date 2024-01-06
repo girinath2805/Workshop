@@ -4,52 +4,77 @@ import { ABI } from '../utils/abi';
 
 const Freelancer = ({ signer }) => {
     const [works, setWorks] = useState([]);
+    const [contract, setContract] = useState(null)
 
     useEffect(() => {
-        const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS;
-
-        const contract = new ethers.Contract(contractAddress, ABI, signer);
-
-        const updateTable = async () => {
+        const initializeContract = async () => {
             try {
-                const index = await contract.workIndex();
-                const signerAddress = await signer.getAddress();
-
-                const worksArray = [];
-                for (let i = 1; i <= index; i++) {
-                    const work = await contract.works(i);
-
-                    if (work.freelancer.toLowerCase() === signerAddress.toLowerCase()) {
-                        worksArray.push({
-                            index: i,
-                            client: work.client,
-                            completed: work.completed,
-                            amount: work.amount
-                        });
-                    }
+                let provider;
+                if (window.ethereum == null) {
+                    console.log("MetaMask not installed; using read-only defaults");
+                    provider = ethers.getDefaultProvider();
+                } else {
+                    provider = new ethers.BrowserProvider(window.ethereum);
                 }
-                setWorks(worksArray);
+
+                const contractAddress = import.meta.env.VITE_CONTRACT_ADDRESS
+    
+                const contractInstance = new ethers.Contract(contractAddress, ABI, signer || provider);
+                setContract(contractInstance);
             } catch (error) {
-                console.error("Error updating table:", error);
+                console.error("Error initializing contract:", error);
             }
         };
-
-        const withdrawFunds = async (index) => {
-            try {
-                const transaction = await contract.withdrawFunds(index);
-
-                await transaction.wait();
-                console.log(`Funds for work ${index} withdrawn successfully!`);
-                await updateTable();
-            } catch (error) {
-                console.error(`Error withdrawing funds for work ${index}:`, error);
-            }
-        };
-        updateTable();
+    
+        initializeContract();
     }, [signer]);
+    
+    useEffect(() => {
+        // Update the table only when contract is not null
+        if (contract) {
+            updateTable();
+        }
+    }, [contract]);
+
+    const updateTable = async () => {
+        try {
+            const index = await contract.workIndex();
+            console.log(index)
+            const signerAddress = await signer.getAddress();
+
+            const worksArray = [];
+            for (let i = 1; i <= index; i++) {
+                const work = await contract.works(i);
+
+                if (work.freelancer.toLowerCase() === signerAddress.toLowerCase()) {
+                    worksArray.push({
+                        index: i,
+                        client: work.client,
+                        completed: work.completed,
+                        amount: work.amount
+                    });
+                }
+            }
+            setWorks(worksArray);
+        } catch (error) {
+            console.error("Error updating table:", error);
+        }
+    };
 
     const handleWithdrawButtonClick = async (index) => {
         await withdrawFunds(index);
+    };
+
+    const withdrawFunds = async (index) => {
+        try {
+            const transaction = await contract.withdrawFunds(index);
+
+            await transaction.wait();
+            console.log(`Funds for work ${index} withdrawn successfully!`);
+            await updateTable();
+        } catch (error) {
+            console.error(`Error withdrawing funds for work ${index}:`, error);
+        }
     };
 
     return (
