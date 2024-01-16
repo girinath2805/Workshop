@@ -1,8 +1,21 @@
-# React + Vite
+# Freelancer DAPP
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## Setting up
 
-Currently, two official plugins are available:
+Create a local repository on your device and clone this repository.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## To run the server
+
+Open the local workshop directory on VS Code and then the run the following scripts
+
+```javascript
+npm install
+```
+
+This will install all the necessary packages listed under the dependencies in the `package.json` 
+
+```javascript
+npm run dev
+```
+
+This will start the server.
